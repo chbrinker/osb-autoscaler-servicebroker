@@ -64,7 +64,7 @@ public class AutoscalerPlatformService implements PlatformService {
     @Override
     public ServiceInstance createInstance(ServiceInstance serviceInstance, Plan plan, Map<String, String> customParameters) throws PlatformException {
 
-        serviceInstance = new ServiceInstance(serviceInstance, "http://currently.not/available", serviceInstance.getId());
+        serviceInstance = new ServiceInstance(serviceInstance, serviceInstance.getDashboardUrl(), serviceInstance.getId());
 
         return serviceInstance;
     }

@@ -1,5 +1,8 @@
 package de.evoila.cf.broker.service.custom;
 
+import de.cf.autoscaler.api.binding.Binding;
+import de.cf.autoscaler.api.binding.BindingContext;
+import de.evoila.cf.broker.bean.AutoscalerBean;
 import de.evoila.cf.broker.exception.*;
 import de.evoila.cf.broker.model.*;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
@@ -7,6 +10,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -27,7 +31,12 @@ public class AutoscalerBindingService extends BindingServiceImpl {
 
     private static final Logger log = LoggerFactory.getLogger(AutoscalerBindingService.class);
 
+    private static final String BINDING_ENDPOINT = "/bindings";
+
     private RestTemplate restTemplate;
+
+    @Autowired
+    private AutoscalerBean autoscalerBean;
 
     @PostConstruct
     private void initialize() {
@@ -50,7 +59,7 @@ public class AutoscalerBindingService extends BindingServiceImpl {
 
         Plan plan = serviceDefinitionRepository.getPlan(planId);
 
-        ResponseEntity<String> response = post(bindingId, instanceId);
+        ResponseEntity<String> response = post(bindingId, serviceInstance);
 
         if(!response.getStatusCode().is2xxSuccessful()) {
             throw new ServiceInstanceBindingException(instanceId, bindingId, response.getStatusCode(), response.getBody());
@@ -115,45 +124,38 @@ public class AutoscalerBindingService extends BindingServiceImpl {
         return null;
     }
 
-    private ResponseEntity<String> post(String bindingId, String instanceId) {
+    @Override
+    protected ServiceInstanceBinding bindService(String bindingId, ServiceInstance serviceInstance, Plan plan)
+            throws ServiceBrokerException {
+
+        log.debug("bind service");
+
+        return new ServiceInstanceBinding(bindingId, serviceInstance.getId(), null, null);
+    }
+
+    private ResponseEntity<String> post(String bindingId, ServiceInstance serviceInstance) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("secret", "jbkneo38858fjvone92");
+        headers.add("secret", autoscalerBean.getSecret());
 
-        Map<String, String> context = new HashMap<>();
-        context.put("platform", "cloudfoundry");
-        context.put("organization_guid", "evoila");
-        context.put("space_guid", "default");
+        BindingContext context = new BindingContext(autoscalerBean.getPlatform(), serviceInstance.getSpaceGuid(), serviceInstance.getOrganizationGuid());
 
-        JSONObject json = new JSONObject();
-        try {
-            json.put("platform", "cloudfoundry");
-            json.put("organization_guid", "evoila");
-            json.put("space_guid", "default");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        Binding binding = new Binding(bindingId, serviceInstance.getId(), autoscalerBean.getScalerId(), System.currentTimeMillis(), context);
 
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("id", "testAppBinding");
-        body.add("resourceId", instanceId);
-        body.add("scalerId", "0");
-        body.add("context", json.toString());
+        HttpEntity<Binding> request = new HttpEntity<>(binding, headers);
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
-
-        String url = "http://autoscaler.cf.eu-de-netde.msh.host/bindings";
+        String url = "http://" + autoscalerBean.getUrl() + BINDING_ENDPOINT;
 
         return restTemplate.postForEntity(url, request, String.class);
     }
 
     private ResponseEntity<String> delete(String bindingId, String instanceId) {
         HttpHeaders headers = new HttpHeaders();
-        headers.add("secret", "jbkneo38858fjvone92");
+        headers.add("secret", autoscalerBean.getSecret());
 
         HttpEntity request = new HttpEntity(headers);
 
-        String url = "http://autoscaler.cf.eu-de-netde.msh.host/bindings/" + bindingId;
+        String url = "http://" + autoscalerBean.getUrl() + BINDING_ENDPOINT + "/" + bindingId;
 
         return restTemplate.exchange(url, HttpMethod.DELETE, request, String.class);
     }

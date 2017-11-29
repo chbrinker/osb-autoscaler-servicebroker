@@ -1,0 +1,4 @@
+[submodule "osb-autoscaler-api"]
+	path = osb-autoscaler-api
+	url = git@github.com:evoila/osb-autoscaler-api.git
+	branch = develop

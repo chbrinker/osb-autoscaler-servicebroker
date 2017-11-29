@@ -9,7 +9,7 @@
         <version>1.2.0</version>
         <relativePath>../osb-core/custom-parent</relativePath>
     </parent>
-    <artifactId>cf-service-broker-example</artifactId>
+    <artifactId>cf-service-broker-autoscaler</artifactId>
     <packaging>jar</packaging>
     <name>cf-service-broker-autoscaler</name>
     <version>1.2.0</version>
@@ -33,6 +33,11 @@
             <groupId>de.evoila.cf.broker</groupId>
             <artifactId>persistence-mongodb</artifactId>
             <version>${persistence.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>de.cf.autoscaler</groupId>
+            <artifactId>api</artifactId>
+            <version>0.1</version>
         </dependency>
     </dependencies>
 </project>
