@@ -30,7 +30,7 @@ public class AutoscalerPlatformService implements PlatformService {
 
     @Override
     @PostConstruct
-    public void registerCustomPlatformServie() {
+    public void registerCustomPlatformService() {
         if(platformRepository != null) {
             platformRepository.addPlatform(Platform.EXISTING_SERVICE, this);
         }

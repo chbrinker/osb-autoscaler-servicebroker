@@ -27,7 +27,7 @@
 
 	<properties>
 		<resource.dir>${basedir}/../osb-service/src/main/resources</resource.dir>
-		<dashboard.module>example</dashboard.module>
+		<dashboard.module>auto-scaler</dashboard.module>
 		<java.version>1.8</java.version>
 	</properties>
 
