@@ -10,3 +10,10 @@ buildNumber.properties
 
 # Avoid ignoring Maven wrapper jar file (.jar files are usually ignored)
 !/.mvn/wrapper/maven-wrapper.jar
+osb-service/.settings/
+.settings/
+osb-service/service-broker-template.log
+osb-service/.project
+osb-service/.factorypath
+osb-service/.classpath
+.project

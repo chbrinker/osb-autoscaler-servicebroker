@@ -47,7 +47,7 @@ public class AutoscalerBindingService extends BindingServiceImpl {
     public ServiceInstanceBindingResponse createServiceInstanceBinding(String bindingId, String instanceId, String serviceId,
                                                                        String planId, boolean generateServiceKey, String route)
             throws ServiceInstanceBindingExistsException, ServiceBrokerException,
-            ServiceInstanceDoesNotExistException, ServiceDefinitionDoesNotExistException, ServiceInstanceBindingException {
+            ServiceInstanceDoesNotExistException, ServiceDefinitionDoesNotExistException {
 
         validateBindingNotExists(bindingId, instanceId);
 
@@ -62,7 +62,8 @@ public class AutoscalerBindingService extends BindingServiceImpl {
         ResponseEntity<String> response = post(bindingId, serviceInstance);
 
         if(!response.getStatusCode().is2xxSuccessful()) {
-            throw new ServiceInstanceBindingException(instanceId, bindingId, response.getStatusCode(), response.getBody());
+        	//method of superclass does not allow to throw a ServiceInstanceBindingException
+            log.error(new ServiceInstanceBindingException(instanceId, bindingId, response.getStatusCode(), response.getBody()).getMessage());
         } else {
             log.info("Binding resulted in " + response.getStatusCode() + ", serviceInstance = " + instanceId
             + ", bindingId = " + bindingId);
@@ -78,7 +79,7 @@ public class AutoscalerBindingService extends BindingServiceImpl {
 
     @Override
     public void deleteServiceInstanceBinding(String bindingId)
-            throws ServiceBrokerException, ServerviceInstanceBindingDoesNotExistsException, ServiceInstanceBindingException {
+            throws ServiceBrokerException, ServerviceInstanceBindingDoesNotExistsException {
         ServiceInstance serviceInstance = getBinding(bindingId);
 
         String instanceId = serviceInstance.getId();
@@ -86,7 +87,8 @@ public class AutoscalerBindingService extends BindingServiceImpl {
         ResponseEntity<String> response = delete(bindingId, serviceInstance.getId());
 
         if(!response.getStatusCode().is2xxSuccessful()) {
-            throw new ServiceInstanceBindingException(instanceId, bindingId, response.getStatusCode(), response.getBody());
+        	//method of superclass does not allow to throw a ServiceInstanceBindingException
+        	log.error(new ServiceInstanceBindingException(instanceId, bindingId, response.getStatusCode(), response.getBody()).getMessage());
         } else {
             log.info("Unbinding resulted in " + response.getStatusCode() + ", serviceInstance = " + instanceId
                     + ", bindingId = " + bindingId);
@@ -106,7 +108,7 @@ public class AutoscalerBindingService extends BindingServiceImpl {
     }
 
     @Override
-    protected Map<String, Object> createCredentials(String bindingId, ServiceInstance serviceInstance, ServerAddress host) throws ServiceBrokerException {
+    protected Map<String, Object> createCredentials(String bindingId, ServiceInstance serviceInstance, ServerAddress host, Plan plan) throws ServiceBrokerException {
         log.info("Binding the Autoscaler Service...");
 
         String dbURL = String.format("autoscaler://%s:%s@%s:%d/%s", this.nextSessionId(),
