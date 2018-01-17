@@ -10,10 +10,6 @@
 	path = osb-core
 	url = git@github.com:evoila/cf-service-broker-core.git
 	branch = develop
-[submodule "cf-service-broker-dashboard"]
-	path = osb-dashboard
-	url = git@github.com:evoila/cf-service-broker-dashboard.git
-	branch = master
 [submodule "cf-service-broker-persistence"]
 	path = osb-persistence
 	url = git@github.com:evoila/cf-service-broker-persistence.git
@@ -22,3 +18,6 @@
 	path = osb-deployment
 	url = git@github.com:evoila/cf-service-broker-deployment.git
 	branch = develop
+[submodule "osb-dashboard"]
+	path = osb-dashboard
+	url = git@github.com:evoila/cf-service-broker-dashboard.git
