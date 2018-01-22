@@ -38,17 +38,17 @@ public class AutoscalerPlatformService implements PlatformService {
 
     @Override
     public boolean isSyncPossibleOnCreate(Plan plan) {
-        return true;
+        return false;
     }
 
     @Override
     public boolean isSyncPossibleOnDelete(ServiceInstance instance) {
-        return true;
+        return false;
     }
 
     @Override
     public boolean isSyncPossibleOnUpdate(ServiceInstance instance, Plan plan) {
-        return true;
+        return false;
     }
 
     @Override
