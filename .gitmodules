@@ -18,6 +18,3 @@
 	path = osb-deployment
 	url = git@github.com:evoila/cf-service-broker-deployment.git
 	branch = develop
-[submodule "osb-dashboard"]
-	path = osb-dashboard
-	url = git@github.com:evoila/cf-service-broker-dashboard.git
