@@ -17,3 +17,4 @@ osb-service/.project
 osb-service/.factorypath
 osb-service/.classpath
 .project
+manifest.yml
