@@ -17,13 +17,15 @@ import javax.annotation.PostConstruct;
  * Created by reneschollmeyer, evoila on 15.01.18.
  */
 @RestController
-@RequestMapping(value = "/configuration")
+@RequestMapping(value = "")
 public class ServiceInstanceBindingConfigurationController {
     private final Logger log = LoggerFactory.getLogger(ServiceInstanceBindingConfigurationController.class);
 
     private static final String CONFIGURATION_BASE_PATH = "/bindings";
 
     private RestTemplate restTemplate;
+
+    private HttpHeaders headers;
 
     @Autowired
     private AutoscalerBean autoscalerBean;
@@ -32,17 +34,34 @@ public class ServiceInstanceBindingConfigurationController {
     private void initialize() {
         HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
         restTemplate = new RestTemplate(requestFactory);
+
+        headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("secret", autoscalerBean.getSecret());
     }
 
-    @GetMapping(value = "/{bindingId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/bindings", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> loadAll() throws ServiceInstanceBindingException {
+        log.debug("GET: " + CONFIGURATION_BASE_PATH + ", loadAll()");
+
+        HttpEntity<String> request = new HttpEntity<>("", headers);
+
+        String url = "https://" + autoscalerBean.getUrl() + CONFIGURATION_BASE_PATH;
+
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+
+        if(!response.getStatusCode().is2xxSuccessful()) {
+            throw new ServiceInstanceBindingException(null, response.getStatusCode(), response.getBody());
+        }
+
+        return response;
+    }
+
+    @GetMapping(value = "/configuration/{bindingId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> loadOne(@PathVariable("bindingId") String bindingId) throws ServiceInstanceBindingException {
 
         log.debug("GET: " + CONFIGURATION_BASE_PATH + "/{bindingId}, " +
                 "loadOne(), bindingId = " + bindingId);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("secret", autoscalerBean.getSecret());
 
         HttpEntity<String> request = new HttpEntity("", headers);
 
@@ -57,15 +76,11 @@ public class ServiceInstanceBindingConfigurationController {
         return response;
     }
 
-    @PatchMapping(value = "/{bindingId}")
+    @PatchMapping(value = "/configuration/{bindingId}")
     public ResponseEntity<String> saveOne(@PathVariable("bindingId") String bindingId,
                                           @RequestBody BindingConfigurationData data) throws ServiceInstanceBindingException {
         log.debug("PATCH: " + CONFIGURATION_BASE_PATH + "/{bindingId}, " +
                 "saveOne(), bindingId = " + bindingId);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("secret", autoscalerBean.getSecret());
 
         HttpEntity<BindingConfigurationData> request = new HttpEntity<>(data, headers);
 
