@@ -22,6 +22,7 @@ public class ServiceInstanceBindingConfigurationController {
     private final Logger log = LoggerFactory.getLogger(ServiceInstanceBindingConfigurationController.class);
 
     private static final String CONFIGURATION_BASE_PATH = "/bindings";
+    private static final String SPECIFIC_INSTANCE_PATH = "/serviceInstance";
 
     private RestTemplate restTemplate;
 
@@ -56,6 +57,26 @@ public class ServiceInstanceBindingConfigurationController {
 
         return response;
     }
+
+    @GetMapping(value = "/bindings/serviceInstance/{serviceInstanceId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> loadAllByServiceInstance(@PathVariable("serviceInstanceId") String serviceInstanceId) throws ServiceInstanceBindingException {
+        log.debug("GET: " + CONFIGURATION_BASE_PATH + "/serviceInstance/" + serviceInstanceId
+                + ", loadAllByServiceInstance()");
+
+        HttpEntity<String> request = new HttpEntity<>("", headers);
+
+        String url = "https://" + autoscalerBean.getUrl() + CONFIGURATION_BASE_PATH + SPECIFIC_INSTANCE_PATH
+                + "/" + serviceInstanceId;
+
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+
+        if(!response.getStatusCode().is2xxSuccessful()) {
+            throw new ServiceInstanceBindingException(null, response.getStatusCode(), response.getBody());
+        }
+
+        return response;
+    }
+
 
     @GetMapping(value = "/configuration/{bindingId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> loadOne(@PathVariable("bindingId") String bindingId) throws ServiceInstanceBindingException {

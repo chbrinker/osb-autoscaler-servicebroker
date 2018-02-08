@@ -6,15 +6,11 @@ import de.evoila.cf.broker.bean.AutoscalerBean;
 import de.evoila.cf.broker.exception.*;
 import de.evoila.cf.broker.model.*;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
@@ -45,7 +41,8 @@ public class AutoscalerBindingService extends BindingServiceImpl {
 
     @Override
     public ServiceInstanceBindingResponse createServiceInstanceBinding(String bindingId, String instanceId, String serviceId,
-                                                                       String planId, boolean generateServiceKey, String route)
+                                                                       String planId, boolean generateServiceKey,
+                                                                       String appGuid, String route)
             throws ServiceInstanceBindingExistsException, ServiceBrokerException,
             ServiceInstanceDoesNotExistException, ServiceDefinitionDoesNotExistException {
 
@@ -59,7 +56,7 @@ public class AutoscalerBindingService extends BindingServiceImpl {
 
         Plan plan = serviceDefinitionRepository.getPlan(planId);
 
-        ResponseEntity<String> response = post(bindingId, serviceInstance);
+        ResponseEntity<String> response = post(bindingId, appGuid, serviceInstance);
 
         if(!response.getStatusCode().is2xxSuccessful()) {
         	//method of superclass does not allow to throw a ServiceInstanceBindingException
@@ -135,14 +132,14 @@ public class AutoscalerBindingService extends BindingServiceImpl {
         return new ServiceInstanceBinding(bindingId, serviceInstance.getId(), null, null);
     }
 
-    private ResponseEntity<String> post(String bindingId, ServiceInstance serviceInstance) {
+    private ResponseEntity<String> post(String bindingId, String appGuid, ServiceInstance serviceInstance) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("secret", autoscalerBean.getSecret());
 
         BindingContext context = new BindingContext(autoscalerBean.getPlatform(), serviceInstance.getSpaceGuid(), serviceInstance.getOrganizationGuid());
 
-        Binding binding = new Binding(bindingId, serviceInstance.getId(), autoscalerBean.getScalerId(), System.currentTimeMillis(), context);
+        Binding binding = new Binding(bindingId, appGuid, autoscalerBean.getScalerId(), serviceInstance.getId(), System.currentTimeMillis(), context);
 
         HttpEntity<Binding> request = new HttpEntity<>(binding, headers);
 
