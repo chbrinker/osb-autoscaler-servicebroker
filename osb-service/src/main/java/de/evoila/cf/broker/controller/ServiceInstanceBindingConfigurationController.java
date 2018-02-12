@@ -21,7 +21,8 @@ import javax.annotation.PostConstruct;
 public class ServiceInstanceBindingConfigurationController {
     private final Logger log = LoggerFactory.getLogger(ServiceInstanceBindingConfigurationController.class);
 
-    private static final String CONFIGURATION_BASE_PATH = "/bindings";
+    private static final String BINDING_BASE_PATH = "/bindings";
+    private static final String CONFIGURATION_BASE_PATH = "/configuration";
     private static final String SPECIFIC_INSTANCE_PATH = "/serviceInstance";
 
     private RestTemplate restTemplate;
@@ -47,7 +48,7 @@ public class ServiceInstanceBindingConfigurationController {
 
         HttpEntity<String> request = new HttpEntity<>("", headers);
 
-        String url = "https://" + autoscalerBean.getUrl() + CONFIGURATION_BASE_PATH;
+        String url = "https://" + autoscalerBean.getUrl() + BINDING_BASE_PATH;
 
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
 
@@ -60,12 +61,12 @@ public class ServiceInstanceBindingConfigurationController {
 
     @GetMapping(value = "/bindings/serviceInstance/{serviceInstanceId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> loadAllByServiceInstance(@PathVariable("serviceInstanceId") String serviceInstanceId) throws ServiceInstanceBindingException {
-        log.debug("GET: " + CONFIGURATION_BASE_PATH + "/serviceInstance/" + serviceInstanceId
-                + ", loadAllByServiceInstance()");
+        log.debug("GET: " + CONFIGURATION_BASE_PATH + "/serviceInstance/{serviceInstanceId}"
+                + ", loadAllByServiceInstance(), serviceInstanceId = " + serviceInstanceId);
 
         HttpEntity<String> request = new HttpEntity<>("", headers);
 
-        String url = "https://" + autoscalerBean.getUrl() + CONFIGURATION_BASE_PATH + SPECIFIC_INSTANCE_PATH
+        String url = "https://" + autoscalerBean.getUrl() + BINDING_BASE_PATH + SPECIFIC_INSTANCE_PATH
                 + "/" + serviceInstanceId;
 
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
@@ -86,7 +87,7 @@ public class ServiceInstanceBindingConfigurationController {
 
         HttpEntity<String> request = new HttpEntity("", headers);
 
-        String url = "http://" + autoscalerBean.getUrl() + CONFIGURATION_BASE_PATH + "/" + bindingId;
+        String url = "http://" + autoscalerBean.getUrl() + BINDING_BASE_PATH + "/" + bindingId;
 
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
 
@@ -105,7 +106,7 @@ public class ServiceInstanceBindingConfigurationController {
 
         HttpEntity<BindingConfigurationData> request = new HttpEntity<>(data, headers);
 
-        String url = "http://" + autoscalerBean.getUrl() + CONFIGURATION_BASE_PATH + "/" + bindingId;
+        String url = "http://" + autoscalerBean.getUrl() + BINDING_BASE_PATH + "/" + bindingId;
 
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PATCH, request, String.class);
 
@@ -116,4 +117,41 @@ public class ServiceInstanceBindingConfigurationController {
         return response;
     }
 
+    @PatchMapping(value = "/configuration/{bindingId}/resetQuotient")
+    public ResponseEntity<String> resetQuotient(@PathVariable("bindingId") String bindingId) throws ServiceInstanceBindingException {
+        log.debug("PATCH:"  + CONFIGURATION_BASE_PATH + "/{bindingId}/resetQuotient," +
+                "resetQuotient(), bindingId = " + bindingId);
+
+        HttpEntity<String> request = new HttpEntity<>("", headers);
+
+        String url = "http://" + autoscalerBean.getUrl() + BINDING_BASE_PATH + "/"
+                + bindingId + "/resetQuotient";
+
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PATCH, request, String.class);
+
+        if(!response.getStatusCode().is2xxSuccessful()) {
+            throw new ServiceInstanceBindingException(bindingId, response.getStatusCode(), response.getBody());
+        }
+
+        return response;
+    }
+
+    @PatchMapping(value = "/configuration/{bindingId}/resetLST")
+    public ResponseEntity<String> resetLST(@PathVariable("bindingId") String bindingId) throws ServiceInstanceBindingException {
+        log.debug("PATCH:"  + CONFIGURATION_BASE_PATH + "/{bindingId}/resetQuotient," +
+                "resetLST(), bindingId = " + bindingId);
+
+        HttpEntity<String> request = new HttpEntity<>("", headers);
+
+        String url = "http://" + autoscalerBean.getUrl() + BINDING_BASE_PATH + "/"
+                + bindingId + "/resetLST";
+
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PATCH, request, String.class);
+
+        if(!response.getStatusCode().is2xxSuccessful()) {
+            throw new ServiceInstanceBindingException(bindingId, response.getStatusCode(), response.getBody());
+        }
+
+        return response;
+    }
 }
