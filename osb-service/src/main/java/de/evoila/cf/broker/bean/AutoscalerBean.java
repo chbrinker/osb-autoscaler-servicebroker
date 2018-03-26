@@ -5,8 +5,9 @@ package de.evoila.cf.broker.bean;
  */
 public interface AutoscalerBean {
 
-    public String getSecret();
-    public String getPlatform();
-    public String getScalerId();
-    public String getUrl();
+    String getSecret();
+    String getPlatform();
+    String getScalerId();
+    String getUrl();
+    String getScheme();
 }

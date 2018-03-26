@@ -2,3 +2,22 @@
 	path = osb-autoscaler-api
 	url = git@github.com:evoila/osb-autoscaler-api.git
 	branch = develop
+[submodule "osb-backup-core"]
+	path = osb-backup-core
+	url = git@github.com:evoila/osb-backup-core.git
+	branch = master
+[submodule "cf-service-broker-core"]
+	path = osb-core
+	url = git@github.com:evoila/cf-service-broker-core.git
+	branch = develop
+[submodule "cf-service-broker-persistence"]
+	path = osb-persistence
+	url = git@github.com:evoila/cf-service-broker-persistence.git
+	branch = develop
+[submodule "cf-service-broker-deployment"]
+	path = osb-deployment
+	url = git@github.com:evoila/cf-service-broker-deployment.git
+	branch = develop
+[submodule "osb-dashboard"]
+	path = osb-dashboard
+	url = git@github.com:evoila/cf-service-broker-dashboard.git

@@ -15,6 +15,7 @@ public class AutoscalerBeanImpl implements AutoscalerBean {
     private String platform;
     private String scalerId;
     private String url;
+    private String scheme;
 
     public String getSecret() { return secret; }
 
@@ -31,4 +32,12 @@ public class AutoscalerBeanImpl implements AutoscalerBean {
     public void setScalerId(String scalerId) { this.scalerId = scalerId; }
 
     public void setUrl(String url) { this.url = url; }
+
+    public String getScheme() {
+        return scheme;
+    }
+
+    public void setScheme(String scheme) {
+        this.scheme = scheme;
+    }
 }
