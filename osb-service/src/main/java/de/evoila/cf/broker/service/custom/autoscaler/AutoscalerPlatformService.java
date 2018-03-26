@@ -1,4 +1,4 @@
-package de.evoila.cf.cpi.custom.props;
+package de.evoila.cf.broker.service.custom.autoscaler;
 
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.Plan;
@@ -13,7 +13,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import javax.ws.rs.NotSupportedException;
 import java.util.Map;
 
 /**
@@ -52,16 +51,6 @@ public class AutoscalerPlatformService implements PlatformService {
     }
 
     @Override
-    public ServiceInstance postProvisioning(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
-        return serviceInstance;
-    }
-
-    @Override
-    public void preDeprovisionServiceInstance(ServiceInstance serviceInstance) {
-
-    }
-
-    @Override
     public ServiceInstance createInstance(ServiceInstance serviceInstance, Plan plan, Map<String, String> customParameters) throws PlatformException {
 
         serviceInstance = new ServiceInstance(serviceInstance, serviceInstance.getDashboardUrl(), serviceInstance.getId());
@@ -70,17 +59,31 @@ public class AutoscalerPlatformService implements PlatformService {
     }
 
     @Override
-    public ServiceInstance getCreateInstancePromise(ServiceInstance instance, Plan plan) {
-        return new ServiceInstance(instance, null, null);
+    public ServiceInstance preCreateInstance(ServiceInstance serviceInstance, Plan plan) {
+        return serviceInstance;
     }
 
     @Override
-    public void deleteServiceInstance(ServiceInstance serviceInstance) throws PlatformException {
-
+    public ServiceInstance getCreateInstancePromise(ServiceInstance serviceInstance, Plan plan) {
+        return serviceInstance;
     }
 
     @Override
-    public ServiceInstance updateInstance(ServiceInstance instance, Plan plan) throws NotSupportedException {
-        throw new NotSupportedException("Updating Service Instances is currently not supported");
+    public ServiceInstance postCreateInstance(ServiceInstance serviceInstance, Plan plan) {
+        return serviceInstance;
+    }
+
+    @Override
+    public void preDeleteInstance(ServiceInstance serviceInstance) { }
+
+    @Override
+    public void deleteInstance(ServiceInstance serviceInstance, Plan plan) { }
+
+    @Override
+    public void postDeleteInstance(ServiceInstance serviceInstance) { }
+
+    @Override
+    public ServiceInstance updateInstance(ServiceInstance serviceInstance, Plan plan) {
+        return serviceInstance;
     }
 }

@@ -1,4 +1,4 @@
-	package de.evoila.cf.broker.service.sample;
+	package de.evoila.cf.broker.haproxy;
 
 import java.util.ArrayList;
 import java.util.List;
