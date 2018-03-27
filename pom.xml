@@ -21,8 +21,8 @@
 		<module>osb-core</module>
 		<module>osb-persistence</module>
 		<module>osb-deployment</module>
-		<module>osb-service</module>
-		<module>osb-autoscaler-api</module>
+        <module>osb-autoscaler-api</module>
+        <module>osb-service</module>
 	</modules>
 
     <properties>
