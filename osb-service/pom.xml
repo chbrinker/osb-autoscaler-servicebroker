@@ -15,13 +15,11 @@
         <relativePath>../</relativePath>
     </parent>
 
-
     <properties>
         <core.version>1.2.0</core.version>
         <deployment.version>1.2.0</deployment.version>
         <persistence.version>1.2.0</persistence.version>
     </properties>
-
 
     <dependencies>
         <!-- Cloud Foundry Service Broker -->
