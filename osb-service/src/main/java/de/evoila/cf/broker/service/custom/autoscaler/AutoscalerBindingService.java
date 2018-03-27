@@ -87,7 +87,8 @@ public class AutoscalerBindingService extends BindingServiceImpl {
 
         BindingContext context = new BindingContext(autoscalerBean.getPlatform(), serviceInstance.getSpaceGuid(), serviceInstance.getOrganizationGuid());
 
-        Binding binding = new Binding(bindingId, appGuid, autoscalerBean.getScalerId(), serviceInstance.getId(), System.currentTimeMillis(), context);
+        Binding binding = new Binding(bindingId, appGuid, "test123", autoscalerBean.getScalerId(),
+                serviceInstance.getId(), System.currentTimeMillis(), context);
 
         HttpEntity<Binding> request = new HttpEntity<>(binding, headers);
 
