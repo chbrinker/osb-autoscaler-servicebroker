@@ -1,4 +1,4 @@
-package de.evoila.cf.broker.service.custom.autoscaler;
+package de.evoila.cf.broker.custom.autoscaler;
 
 import de.cf.autoscaler.api.binding.Binding;
 import de.cf.autoscaler.api.binding.BindingContext;

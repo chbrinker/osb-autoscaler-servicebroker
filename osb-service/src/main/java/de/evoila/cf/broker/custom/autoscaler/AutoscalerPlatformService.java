@@ -1,4 +1,4 @@
-package de.evoila.cf.broker.service.custom.autoscaler;
+package de.evoila.cf.broker.custom.autoscaler;
 
 import de.evoila.cf.broker.exception.PlatformException;
 import de.evoila.cf.broker.model.Plan;
