@@ -1,7 +1,7 @@
 package de.evoila.cf.broker.custom.autoscaler;
 
-import de.cf.autoscaler.api.binding.Binding;
-import de.cf.autoscaler.api.binding.BindingContext;
+import de.evoila.cf.autoscaler.api.binding.Binding;
+import de.evoila.cf.autoscaler.api.binding.BindingContext;
 import de.evoila.cf.broker.bean.AutoscalerBean;
 import de.evoila.cf.broker.exception.ServiceInstanceBindingException;
 import de.evoila.cf.broker.model.*;
