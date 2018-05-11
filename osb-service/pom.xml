@@ -49,6 +49,10 @@
             <artifactId>osb-autoscaler-api</artifactId>
             <version>${core.version}</version>
         </dependency>
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+        </dependency> 
     </dependencies>
 
     <build>
