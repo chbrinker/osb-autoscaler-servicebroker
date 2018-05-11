@@ -50,17 +50,18 @@ public class AutoscalerPlatformService implements PlatformService {
         return false;
     }
 
-    @Override
-    public ServiceInstance createInstance(ServiceInstance serviceInstance, Plan plan, Map<String, String> customParameters) throws PlatformException {
-
-        serviceInstance = new ServiceInstance(serviceInstance, serviceInstance.getDashboardUrl(), serviceInstance.getId());
-
-        return serviceInstance;
-    }
 
     @Override
     public ServiceInstance preCreateInstance(ServiceInstance serviceInstance, Plan plan) {
         return serviceInstance;
+    }
+
+    @Override
+    public ServiceInstance createInstance(ServiceInstance serviceInstance,Plan plan,Map<String, Object> customParameters) throws PlatformException {
+        serviceInstance = new ServiceInstance(serviceInstance, serviceInstance.getDashboardUrl(), serviceInstance.getId());
+
+        return serviceInstance;
+
     }
 
     @Override
@@ -83,7 +84,8 @@ public class AutoscalerPlatformService implements PlatformService {
     public void postDeleteInstance(ServiceInstance serviceInstance) { }
 
     @Override
-    public ServiceInstance updateInstance(ServiceInstance serviceInstance, Plan plan) {
+    public ServiceInstance updateInstance(ServiceInstance serviceInstance,Plan plan,Map<String, Object> customParameters) throws PlatformException {
         return serviceInstance;
     }
+
 }

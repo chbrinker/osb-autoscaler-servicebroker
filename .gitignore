@@ -19,3 +19,4 @@ osb-service/.classpath
 .project
 manifest.yml
 osb-service/src/main/resources
+*.iml
