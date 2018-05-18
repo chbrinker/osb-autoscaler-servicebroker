@@ -123,6 +123,7 @@ public class AutoscalerBindingService extends BindingServiceImpl {
                         + ". Application might still be registered.");
             }
         }
+        jedis.close();
     }
 
     private ResponseEntity<String> post(String bindingId, String appGuid, ServiceInstance serviceInstance) {
