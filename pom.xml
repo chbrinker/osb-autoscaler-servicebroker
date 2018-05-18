@@ -27,7 +27,7 @@
 
     <properties>
         <resource.dir>${basedir}/../osb-service/src/main/resources</resource.dir>
-        <dashboard.module>mongodb</dashboard.module>
+        <dashboard.module>auto-scaler</dashboard.module>
         <spring-cloud.version>Edgware.SR2</spring-cloud.version>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
