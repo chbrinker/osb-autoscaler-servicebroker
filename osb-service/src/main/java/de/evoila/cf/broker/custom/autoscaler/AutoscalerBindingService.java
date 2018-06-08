@@ -160,10 +160,10 @@ public class AutoscalerBindingService extends BindingServiceImpl {
                 jedis.del(binding.getAppGuid());
 
                 log.info("Successfully updated the subscription status for app = " + serviceInstance.getId()
-        		+ ". Application is now not registered.");
+        		+ ". Application is no longer registered.");
             } else {
                 log.error("Error updating the subscription status for app = " + binding.getAppGuid()
-                        + ". Application might still be registered.");
+                        + ". Application might still be registered or was not registered in the first place.");
             }
         }
         jedis.close();
