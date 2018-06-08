@@ -88,4 +88,14 @@ public class AutoscalerPlatformService implements PlatformService {
         return serviceInstance;
     }
 
+	@Override
+	public ServiceInstance preUpdateInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public ServiceInstance postUpdateInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
+		throw new UnsupportedOperationException();
+	}
+
 }

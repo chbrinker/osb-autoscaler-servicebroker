@@ -4,9 +4,11 @@ import de.evoila.cf.autoscaler.api.binding.Binding;
 import de.evoila.cf.autoscaler.api.binding.BindingContext;
 import de.evoila.cf.broker.bean.AutoscalerBean;
 import de.evoila.cf.broker.bean.RedisBean;
+import de.evoila.cf.broker.connection.CFClientConnector;
 import de.evoila.cf.broker.exception.ServiceInstanceBindingException;
 import de.evoila.cf.broker.model.*;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
+import groovy.json.JsonBuilder;
 import redis.clients.jedis.Jedis;
 
 import org.slf4j.Logger;
@@ -36,6 +38,9 @@ public class AutoscalerBindingService extends BindingServiceImpl {
     
     @Autowired
     private RedisBean redisBean;
+    
+    @Autowired
+    private CFClientConnector cfClient;
     
     private Jedis createJedisConnection() {
     	Jedis jedis = new Jedis(redisBean.getHost(), redisBean.getPort());
@@ -70,7 +75,9 @@ public class AutoscalerBindingService extends BindingServiceImpl {
                     + serviceInstance.getId() + ", bindingId = " + bindingId);
             
             if (jedis.get(serviceInstanceBindingRequest.getAppGuid()) != null) {
-                jedis.set(serviceInstanceBindingRequest.getAppGuid(), "true");
+                BindingRedisObject redisObject = new BindingRedisObject(cfClient.getServiceEnvironment(serviceInstanceBindingRequest.getAppGuid()), true);
+                String redisString = new JsonBuilder(redisObject).toString();
+                jedis.set(serviceInstanceBindingRequest.getAppGuid(), redisString);
 
                 log.info("Successfully updated the subscription status for app = " + serviceInstanceBindingRequest.getAppGuid()
                 		+ ". Application is now registered.");
@@ -78,6 +85,8 @@ public class AutoscalerBindingService extends BindingServiceImpl {
             	/*
             	 * This might be the case if no instance of the nozzle is running for the dedicated redis instance, because the Nozzle creates 
             	 * entries for applications which it receives a log or a metric from Cloud Foundry.
+            	 * 
+            	 * An other possibility is that the app guid is invalid or there is no application with that guid generating metrics or logs for the Nozzle.
             	 */
                 log.error("Error updating the subscription status for app = " + serviceInstanceBindingRequest.getAppGuid()
                         + ". Application is not registered.");
