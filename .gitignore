@@ -20,3 +20,4 @@ osb-service/.classpath
 manifest.yml
 osb-service/src/main/resources
 *.iml
+osb-service/application.pid

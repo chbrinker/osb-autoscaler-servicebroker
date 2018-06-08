@@ -5,7 +5,13 @@ import de.evoila.cf.autoscaler.api.binding.BindingContext;
 import de.evoila.cf.broker.bean.AutoscalerBean;
 import de.evoila.cf.broker.bean.RedisBean;
 import de.evoila.cf.broker.connection.CFClientConnector;
+import de.evoila.cf.broker.exception.ServiceBrokerException;
+import de.evoila.cf.broker.exception.ServiceBrokerFeatureIsNotSupportedException;
+import de.evoila.cf.broker.exception.ServiceInstanceBindingBadRequestException;
 import de.evoila.cf.broker.exception.ServiceInstanceBindingException;
+import de.evoila.cf.broker.exception.ServiceInstanceBindingExistsException;
+import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
+import de.evoila.cf.broker.exception.ServiceInstanceExistsException;
 import de.evoila.cf.broker.model.*;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import groovy.json.JsonBuilder;
@@ -16,9 +22,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -62,7 +70,7 @@ public class AutoscalerBindingService extends BindingServiceImpl {
 
     @Override
     protected ServiceInstanceBinding bindService(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
-                                                 ServiceInstance serviceInstance, Plan plan) {
+                                                 ServiceInstance serviceInstance, Plan plan) throws ServiceInstanceBindingBadRequestException, ServiceBrokerException {
 
         ResponseEntity<String> response = post(bindingId, serviceInstanceBindingRequest.getAppGuid(), serviceInstance);
         Jedis jedis = createJedisConnection();
@@ -70,6 +78,17 @@ public class AutoscalerBindingService extends BindingServiceImpl {
         if (!response.getStatusCode().is2xxSuccessful()) {
             log.error(new ServiceInstanceBindingException(serviceInstance.getId(), bindingId, response.getStatusCode(),
                     response.getBody()).getMessage());
+            
+        	if (response.getStatusCode() == HttpStatus.BAD_REQUEST)  {
+        		throw new ServiceInstanceBindingBadRequestException(bindingId, response.getBody());
+        	}
+        	if (response.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+        		throw new ServiceBrokerException("The Broker is not authorized at the service instance. (401 Response)");
+        	}
+        	if (response.getStatusCode() == HttpStatus.CONFLICT) {
+        		throw new ServiceBrokerException("The service instance already holds a binding in conflict with the requested one. Maybe the broker and the service instance are out of sync.");
+        	}
+        	throw new ServiceBrokerException("The Broker faced an unexpected error while calling the ServiceInstance to create a binding: " + response.getStatusCodeValue() + " - " + response.getBody());	
         } else {
             log.info("Binding resulted in " + response.getStatusCode() + ", serviceInstance = "
                     + serviceInstance.getId() + ", bindingId = " + bindingId);
@@ -107,16 +126,31 @@ public class AutoscalerBindingService extends BindingServiceImpl {
 
         return credentials;
     }
+    
+    @Override
+    protected ServiceInstanceBinding bindServiceKey(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
+            ServiceInstance serviceInstance, Plan plan, List<ServerAddress> externalAddresses) throws ServiceBrokerException, ServiceBrokerFeatureIsNotSupportedException {
+    	throw new ServiceBrokerFeatureIsNotSupportedException(bindingId, serviceInstance.getId(), "This Broker does not support service key generation. Therefore app_guid must be present.");
+    }
 
     @Override
-    protected void deleteBinding(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) {
+    protected void deleteBinding(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
         String bindingId = binding.getId();
         ResponseEntity<String> response = delete(bindingId, serviceInstance.getId());
+        
         Jedis jedis = createJedisConnection();
 
         if(!response.getStatusCode().is2xxSuccessful()) {
             log.error(new ServiceInstanceBindingException(serviceInstance.getId(), bindingId, response.getStatusCode(),
                     response.getBody()).getMessage());
+            
+        	if (response.getStatusCode() == HttpStatus.GONE)  {
+        		throw new ServiceBrokerException("ServiceInstance can not find the binding. Maybe the service broker and the ServiceInstance are out of sync. (410 Response)");
+        	}
+        	if (response.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+        		throw new ServiceBrokerException("The Broker is not authorized at the service instance. (401 Response)");
+        	}
+        	throw new ServiceBrokerException("The Broker faced an unexpected error while calling the ServiceInstance to delete a binding: " + response.getStatusCodeValue() + " - " + response.getBody());
         } else {
             log.info("Unbinding resulted in " + response.getStatusCode() + ", serviceInstance = "
                     + serviceInstance.getId() + ", bindingId = " + bindingId);
@@ -135,7 +169,7 @@ public class AutoscalerBindingService extends BindingServiceImpl {
         jedis.close();
     }
 
-    private ResponseEntity<String> post(String bindingId, String appGuid, ServiceInstance serviceInstance) {
+    private ResponseEntity<String> post(String bindingId, String appGuid, ServiceInstance serviceInstance) throws ServiceInstanceBindingBadRequestException {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("secret", autoscalerBean.getSecret());
@@ -149,7 +183,14 @@ public class AutoscalerBindingService extends BindingServiceImpl {
 
         String url = autoscalerBean.getScheme() + "://" + autoscalerBean.getUrl() + BINDING_ENDPOINT;
 
-        return restTemplate.postForEntity(url, request, String.class);
+        ResponseEntity<String> response = new ResponseEntity<>("Could not get a valid response from the autoscaler core.",HttpStatus.INTERNAL_SERVER_ERROR);
+        try {
+        	response = restTemplate.postForEntity(url, request, String.class);
+        } catch (HttpClientErrorException ex) {
+        	log.error("Request to the autoscaler core raised an " + ex.getRawStatusCode() + " error.");
+        	response = new ResponseEntity<>(ex.getResponseBodyAsString(), HttpStatus.valueOf(ex.getRawStatusCode()));
+        }
+        return response;
     }
 
     private ResponseEntity<String> delete(String bindingId, String instanceId) {
@@ -160,7 +201,14 @@ public class AutoscalerBindingService extends BindingServiceImpl {
 
         String url = autoscalerBean.getScheme() + "://" + autoscalerBean.getUrl() + BINDING_ENDPOINT + "/" + bindingId;
 
-        return restTemplate.exchange(url, HttpMethod.DELETE, request, String.class);
+        ResponseEntity<String> response = new ResponseEntity<>("Could not get a valid response from the autoscaler core.",HttpStatus.INTERNAL_SERVER_ERROR);
+        try {
+        	response = restTemplate.exchange(url, HttpMethod.DELETE, request, String.class);
+        } catch (HttpClientErrorException ex) {
+        	log.error("Delete Binding Request to the autoscaler core raised an " + ex.getRawStatusCode() + " error.");
+        	response = new ResponseEntity<>(ex.getResponseBodyAsString(), HttpStatus.valueOf(ex.getRawStatusCode()));
+        }
+        return response;
     }
 
 }
