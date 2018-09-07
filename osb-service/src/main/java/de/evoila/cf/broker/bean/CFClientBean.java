@@ -1,16 +1,39 @@
 package de.evoila.cf.broker.bean;
 
-public interface CFClientBean {
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Service;
 
-    public String getApiHost();
+import de.evoila.cf.broker.bean.CFClientBean;
 
-    public void setApiHost(String apiHost);
+@Service
+@ConfigurationProperties(prefix = "cf")
+public class CFClientBean {
 
-    public String getUsername();
+    private String apiHost;
+    private String username;
+    private String password;
 
-    public void setUsername(String username);
+    public String getApiHost() {
+        return apiHost;
+    }
 
-    public String getPassword();
+    public void setApiHost(String apiHost) {
+        this.apiHost = apiHost;
+    }
 
-    public void setPassword(String password);
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }
