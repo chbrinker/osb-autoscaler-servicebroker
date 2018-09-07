@@ -13,8 +13,11 @@ import de.evoila.cf.broker.exception.ServiceInstanceBindingExistsException;
 import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
 import de.evoila.cf.broker.exception.ServiceInstanceExistsException;
 import de.evoila.cf.broker.model.*;
+import de.evoila.cf.broker.redis.RedisClientConnector;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import groovy.json.JsonBuilder;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import redis.clients.jedis.Jedis;
 
 import org.slf4j.Logger;
@@ -25,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,13 +54,8 @@ public class AutoscalerBindingService extends BindingServiceImpl {
     @Autowired
     private CFClientConnector cfClient;
     
-    private Jedis createJedisConnection() {
-    	Jedis jedis = new Jedis(redisBean.getHost(), redisBean.getPort());
-        jedis.connect();
-        jedis.auth(redisBean.getPassword());
-        
-        return jedis;
-    }
+    @Autowired
+    private RedisClientConnector redisClientConnector;
 
     @Override
     protected RouteBinding bindRoute(ServiceInstance serviceInstance, String route) {
@@ -70,10 +69,9 @@ public class AutoscalerBindingService extends BindingServiceImpl {
 
     @Override
     protected ServiceInstanceBinding bindService(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
-                                                 ServiceInstance serviceInstance, Plan plan) throws ServiceInstanceBindingBadRequestException, ServiceBrokerException {
+                                                 ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
 
         ResponseEntity<String> response = post(bindingId, serviceInstanceBindingRequest.getAppGuid(), serviceInstance);
-        Jedis jedis = createJedisConnection();
 
         if (!response.getStatusCode().is2xxSuccessful()) {
             log.error(new ServiceInstanceBindingException(serviceInstance.getId(), bindingId, response.getStatusCode(),
@@ -93,10 +91,10 @@ public class AutoscalerBindingService extends BindingServiceImpl {
             log.info("Binding resulted in " + response.getStatusCode() + ", serviceInstance = "
                     + serviceInstance.getId() + ", bindingId = " + bindingId);
             
-            if (jedis.get(serviceInstanceBindingRequest.getAppGuid()) != null) {
+            if (redisClientConnector.get(serviceInstanceBindingRequest.getAppGuid()) != null) {
                 BindingRedisObject redisObject = new BindingRedisObject(cfClient.getServiceEnvironment(serviceInstanceBindingRequest.getAppGuid()), true);
                 String redisString = new JsonBuilder(redisObject).toString();
-                jedis.set(serviceInstanceBindingRequest.getAppGuid(), redisString);
+                redisClientConnector.set(serviceInstanceBindingRequest.getAppGuid(), redisString);
 
                 log.info("Successfully updated the subscription status for app = " + serviceInstanceBindingRequest.getAppGuid()
                 		+ ". Application is now registered.");
@@ -111,8 +109,6 @@ public class AutoscalerBindingService extends BindingServiceImpl {
                         + ". Application is not registered.");
             }
         }
-        
-        jedis.close();
 
         ServiceInstanceBinding serviceInstanceBinding = new ServiceInstanceBinding(bindingId, serviceInstance.getId(), null, null);
         serviceInstanceBinding.setAppGuid(serviceInstanceBindingRequest.getAppGuid());
@@ -126,19 +122,11 @@ public class AutoscalerBindingService extends BindingServiceImpl {
 
         return credentials;
     }
-    
-    @Override
-    protected ServiceInstanceBinding bindServiceKey(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
-            ServiceInstance serviceInstance, Plan plan, List<ServerAddress> externalAddresses) throws ServiceBrokerException, ServiceBrokerFeatureIsNotSupportedException {
-    	throw new ServiceBrokerFeatureIsNotSupportedException(bindingId, serviceInstance.getId(), "This Broker does not support service key generation. Therefore app_guid must be present.");
-    }
 
     @Override
-    protected void deleteBinding(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
+    protected void unbindService(ServiceInstanceBinding binding, ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
         String bindingId = binding.getId();
         ResponseEntity<String> response = delete(bindingId, serviceInstance.getId());
-        
-        Jedis jedis = createJedisConnection();
 
         if(!response.getStatusCode().is2xxSuccessful()) {
             log.error(new ServiceInstanceBindingException(serviceInstance.getId(), bindingId, response.getStatusCode(),
@@ -155,9 +143,9 @@ public class AutoscalerBindingService extends BindingServiceImpl {
             log.info("Unbinding resulted in " + response.getStatusCode() + ", serviceInstance = "
                     + serviceInstance.getId() + ", bindingId = " + bindingId);
             
-            if (jedis.get(binding.getAppGuid()) != null) {
+            if (redisClientConnector.get(binding.getAppGuid()) != null) {
             	// A running nozzle will automatically create a new unregistered entry in Redis for this app the next time a metric or a log is received
-                jedis.del(binding.getAppGuid());
+                redisClientConnector.del(binding.getAppGuid());
 
                 log.info("Successfully updated the subscription status for app = " + serviceInstance.getId()
         		+ ". Application is no longer registered.");
@@ -166,10 +154,9 @@ public class AutoscalerBindingService extends BindingServiceImpl {
                         + ". Application might still be registered or was not registered in the first place.");
             }
         }
-        jedis.close();
     }
 
-    private ResponseEntity<String> post(String bindingId, String appGuid, ServiceInstance serviceInstance) throws ServiceInstanceBindingBadRequestException {
+    private ResponseEntity<String> post(String bindingId, String appGuid, ServiceInstance serviceInstance) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("secret", autoscalerBean.getSecret());
@@ -210,5 +197,4 @@ public class AutoscalerBindingService extends BindingServiceImpl {
         }
         return response;
     }
-
 }

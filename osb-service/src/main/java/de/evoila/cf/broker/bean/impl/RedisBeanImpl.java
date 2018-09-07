@@ -5,20 +5,22 @@ import org.springframework.stereotype.Service;
 
 import de.evoila.cf.broker.bean.RedisBean;
 
+import java.util.List;
+
 @Service
 @ConfigurationProperties(prefix = "redis")
 public class RedisBeanImpl implements RedisBean {
 
-    private String host;
+    private List<String> hosts;
     private int port;
     private String password;
 
-    public String getHost() {
-        return host;
+    public List<String> getHosts() {
+        return hosts;
     }
 
-    public void setHost(String host) {
-        this.host = host;
+    public void setHosts(List<String> hosts) {
+        this.hosts = hosts;
     }
 
     public int getPort() {
