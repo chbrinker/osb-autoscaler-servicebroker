@@ -1,7 +1,7 @@
 package de.evoila.cf.broker.connection;
 
-import javax.annotation.PostConstruct;
-
+import de.evoila.cf.broker.bean.CFClientBean;
+import de.evoila.cf.broker.model.BindingRedisEnvironment;
 import org.cloudfoundry.client.v2.applications.SummaryApplicationRequest;
 import org.cloudfoundry.client.v2.applications.SummaryApplicationResponse;
 import org.cloudfoundry.client.v2.organizations.GetOrganizationRequest;
@@ -11,19 +11,20 @@ import org.cloudfoundry.client.v2.spaces.GetSpaceResponse;
 import org.cloudfoundry.reactor.DefaultConnectionContext;
 import org.cloudfoundry.reactor.client.ReactorCloudFoundryClient;
 import org.cloudfoundry.reactor.tokenprovider.PasswordGrantTokenProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import de.evoila.cf.broker.bean.CFClientBean;
-import de.evoila.cf.broker.model.BindingRedisEnvironment;
+import javax.annotation.PostConstruct;
 
 @Service
 public class CFClientConnector {
 
     private ReactorCloudFoundryClient cfClient;
 
-    @Autowired
     private CFClientBean cfClientBean;
+
+    public CFClientConnector(CFClientBean cfClientBean) {
+        this.cfClientBean = cfClientBean;
+    }
 
     @PostConstruct
     private void init() {

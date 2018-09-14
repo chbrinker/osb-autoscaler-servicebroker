@@ -3,34 +3,27 @@ package de.evoila.cf.broker.custom.autoscaler;
 import de.evoila.cf.autoscaler.api.binding.Binding;
 import de.evoila.cf.autoscaler.api.binding.BindingContext;
 import de.evoila.cf.broker.bean.AutoscalerBean;
-import de.evoila.cf.broker.bean.RedisBean;
 import de.evoila.cf.broker.connection.CFClientConnector;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
-import de.evoila.cf.broker.exception.ServiceBrokerFeatureIsNotSupportedException;
 import de.evoila.cf.broker.exception.ServiceInstanceBindingBadRequestException;
 import de.evoila.cf.broker.exception.ServiceInstanceBindingException;
-import de.evoila.cf.broker.exception.ServiceInstanceBindingExistsException;
-import de.evoila.cf.broker.exception.ServiceInstanceDoesNotExistException;
-import de.evoila.cf.broker.exception.ServiceInstanceExistsException;
 import de.evoila.cf.broker.model.*;
 import de.evoila.cf.broker.redis.RedisClientConnector;
+import de.evoila.cf.broker.repository.BindingRepository;
+import de.evoila.cf.broker.repository.RouteBindingRepository;
+import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
+import de.evoila.cf.broker.repository.ServiceInstanceRepository;
+import de.evoila.cf.broker.service.HAProxyService;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
 import groovy.json.JsonBuilder;
-import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import redis.clients.jedis.Jedis;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -45,17 +38,20 @@ public class AutoscalerBindingService extends BindingServiceImpl {
     
     private RestTemplate restTemplate = new RestTemplate();
 
-    @Autowired
     private AutoscalerBean autoscalerBean;
-    
-    @Autowired
-    private RedisBean redisBean;
-    
-    @Autowired
+
     private CFClientConnector cfClient;
-    
-    @Autowired
+
     private RedisClientConnector redisClientConnector;
+
+    public AutoscalerBindingService(BindingRepository bindingRepository, ServiceDefinitionRepository serviceDefinitionRepository, ServiceInstanceRepository serviceInstanceRepository,
+                                    RouteBindingRepository routeBindingRepository, HAProxyService haProxyService, AutoscalerBean autoscalerBean, CFClientConnector cfClient, RedisClientConnector redisClientConnector) {
+        super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository, haProxyService);
+        this.autoscalerBean = autoscalerBean;
+        this.cfClient = cfClient;
+        this.redisClientConnector = redisClientConnector;
+    }
+
 
     @Override
     protected RouteBinding bindRoute(ServiceInstance serviceInstance, String route) {

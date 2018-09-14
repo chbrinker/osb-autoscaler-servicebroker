@@ -5,7 +5,6 @@ import de.evoila.cf.broker.exception.ServiceInstanceBindingException;
 import de.evoila.cf.broker.model.BindingConfigurationData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.bind.annotation.*;
@@ -29,8 +28,11 @@ public class ServiceInstanceBindingConfigurationController {
 
     private HttpHeaders headers;
 
-    @Autowired
     private AutoscalerBean autoscalerBean;
+
+    public ServiceInstanceBindingConfigurationController(AutoscalerBean autoscalerBean) {
+        this.autoscalerBean = autoscalerBean;
+    }
 
     @PostConstruct
     private void initialize() {

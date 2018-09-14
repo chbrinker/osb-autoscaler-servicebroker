@@ -8,7 +8,6 @@ import de.evoila.cf.broker.repository.PlatformRepository;
 import de.evoila.cf.broker.service.PlatformService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
@@ -24,8 +23,11 @@ public class AutoscalerPlatformService implements PlatformService {
 
     private final Logger log = LoggerFactory.getLogger(AutoscalerPlatformService.class);
 
-    @Autowired(required = false)
     private PlatformRepository platformRepository;
+
+    public AutoscalerPlatformService(PlatformRepository platformRepository) {
+        this.platformRepository = platformRepository;
+    }
 
     @Override
     @PostConstruct
