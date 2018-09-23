@@ -22,3 +22,15 @@ spring:
 
   server:
     port: 8080
+  rabbitmq:
+    host: "${RABBITMQ_HOST}"
+  data:
+    mongodb:
+      host: "${MONGODB_HOST}"
+haproxy:
+  uri: "https://${SERVICE_KEY_MANAGER}/agents/${HAPROXY_AGENT_ID}/schemas?type=listen"
+existing:
+  endpoint:
+    pcfHosts: "${HAPROXY_HOSTS}"
+    name: haproxy
+    port: 3306
