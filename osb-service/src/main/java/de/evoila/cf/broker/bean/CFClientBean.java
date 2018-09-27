@@ -7,11 +7,12 @@ import de.evoila.cf.broker.bean.CFClientBean;
 
 @Service
 @ConfigurationProperties(prefix = "cf")
-public class CFClientBean {
+public class CFClientBean  {
 
     private String apiHost;
     private String username;
     private String password;
+    private boolean skipSsl;
 
     public String getApiHost() {
         return apiHost;
@@ -35,5 +36,13 @@ public class CFClientBean {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public boolean getSkipSsl(){
+        return this.skipSsl;
+    }
+
+    public void setSkipSsl(boolean skipSsl){
+        this.skipSsl=skipSsl;
     }
 }

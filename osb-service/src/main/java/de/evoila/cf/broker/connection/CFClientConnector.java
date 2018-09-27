@@ -34,6 +34,7 @@ public class CFClientConnector {
     private DefaultConnectionContext connectionContext() {
         return DefaultConnectionContext.builder()
                 .apiHost(cfClientBean.getApiHost())
+                .skipSslValidation(cfClientBean.getSkipSsl())
                 .build();
     }
 

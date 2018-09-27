@@ -15,9 +15,12 @@ import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
 import de.evoila.cf.broker.repository.ServiceInstanceRepository;
 import de.evoila.cf.broker.service.HAProxyService;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
+import de.evoila.cf.config.security.AcceptSelfSignedClientHttpRequestFactory;
 import groovy.json.JsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -43,6 +46,12 @@ public class AutoscalerBindingService extends BindingServiceImpl {
     private CFClientConnector cfClient;
 
     private RedisClientConnector redisClientConnector;
+
+    @ConditionalOnBean(AcceptSelfSignedClientHttpRequestFactory.class)
+    @Autowired(required = false)
+    private void selfSignedRestTemplate(AcceptSelfSignedClientHttpRequestFactory requestFactory) {
+		restTemplate.setRequestFactory(requestFactory);
+    }
 
     public AutoscalerBindingService(BindingRepository bindingRepository, ServiceDefinitionRepository serviceDefinitionRepository, ServiceInstanceRepository serviceInstanceRepository,
                                     RouteBindingRepository routeBindingRepository, HAProxyService haProxyService, AutoscalerBean autoscalerBean, CFClientConnector cfClient, RedisClientConnector redisClientConnector) {
