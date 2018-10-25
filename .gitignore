@@ -21,3 +21,5 @@ manifest.yml
 osb-service/src/main/resources
 *.iml
 osb-service/application.pid
+application.pid
+.idea/
