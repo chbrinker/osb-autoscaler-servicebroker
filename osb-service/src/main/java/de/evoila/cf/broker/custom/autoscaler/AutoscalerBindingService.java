@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,16 +35,28 @@ public class AutoscalerBindingService extends BindingServiceImpl {
 
     private static final Logger log = LoggerFactory.getLogger(AutoscalerBindingService.class);
 
+    private HttpHeaders headers = new HttpHeaders();
+
+    private static final String CONTENT_TYPE = "Content-Type";
+
+    private static final String APPLICATION_JSON = "application/json";
+
     private static final String BINDING_ENDPOINT = "/bindings";
     
     private RestTemplate restTemplate = new RestTemplate();
 
     private AutoscalerBean autoscalerBean;
 
+    @PostConstruct
+    private void init() {
+        restTemplate = new RestTemplate();
+        headers.add(CONTENT_TYPE, APPLICATION_JSON);
+    }
+
     @ConditionalOnBean(AcceptSelfSignedClientHttpRequestFactory.class)
     @Autowired(required = false)
     private void selfSignedRestTemplate(AcceptSelfSignedClientHttpRequestFactory requestFactory) {
-		restTemplate.setRequestFactory(requestFactory);
+        restTemplate.setRequestFactory(requestFactory);
     }
 
     public AutoscalerBindingService(BindingRepository bindingRepository, ServiceDefinitionRepository serviceDefinitionRepository, ServiceInstanceRepository serviceInstanceRepository,
@@ -125,11 +138,8 @@ public class AutoscalerBindingService extends BindingServiceImpl {
     }
 
     private ResponseEntity<String> post(String bindingId, String appGuid, ServiceInstance serviceInstance) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("secret", autoscalerBean.getSecret());
-
-        BindingContext context = new BindingContext(autoscalerBean.getPlatform(), serviceInstance.getSpaceGuid(), serviceInstance.getOrganizationGuid());
+        BindingContext context = new BindingContext(autoscalerBean.getPlatform(),
+                serviceInstance.getSpaceGuid(), serviceInstance.getOrganizationGuid());
 
         Binding binding = new Binding(bindingId, appGuid, "unknown", autoscalerBean.getScalerId(),
                 serviceInstance.getId(), System.currentTimeMillis(), context);
@@ -138,7 +148,7 @@ public class AutoscalerBindingService extends BindingServiceImpl {
 
         String url = autoscalerBean.getScheme() + "://" + autoscalerBean.getUrl() + BINDING_ENDPOINT;
 
-        ResponseEntity<String> response = new ResponseEntity<>("Could not get a valid response from the autoscaler core.", HttpStatus.INTERNAL_SERVER_ERROR);
+        ResponseEntity<String> response;
         try {
             response = restTemplate.postForEntity(url, request, String.class);
         } catch (HttpClientErrorException ex) {
@@ -149,14 +159,11 @@ public class AutoscalerBindingService extends BindingServiceImpl {
     }
 
     private ResponseEntity<String> delete(String bindingId, String instanceId) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("secret", autoscalerBean.getSecret());
-
         HttpEntity request = new HttpEntity(headers);
 
         String url = autoscalerBean.getScheme() + "://" + autoscalerBean.getUrl() + BINDING_ENDPOINT + "/" + bindingId;
 
-        ResponseEntity<String> response = new ResponseEntity<>("Could not get a valid response from the autoscaler core.", HttpStatus.INTERNAL_SERVER_ERROR);
+        ResponseEntity<String> response;
         try {
             response = restTemplate.exchange(url, HttpMethod.DELETE, request, String.class);
         } catch (HttpClientErrorException ex) {

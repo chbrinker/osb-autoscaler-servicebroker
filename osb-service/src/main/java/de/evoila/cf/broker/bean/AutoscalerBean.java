@@ -1,6 +1,5 @@
 package de.evoila.cf.broker.bean;
 
-import de.evoila.cf.broker.bean.AutoscalerBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 
@@ -11,27 +10,15 @@ import org.springframework.stereotype.Service;
 @ConfigurationProperties(prefix = "autoscaler")
 public class AutoscalerBean {
 
-    private String secret;
-    private String platform;
-    private String scalerId;
-    private String url;
     private String scheme;
 
-    public String getSecret() { return secret; }
+    private int port;
 
-    public String getPlatform() { return platform; }
+    private String url;
 
-    public String getScalerId() { return scalerId; }
+    private String platform;
 
-    public String getUrl() { return url; }
-
-    public void setSecret(String secret) { this.secret = secret; }
-
-    public void setPlatform(String platform) { this.platform = platform; }
-
-    public void setScalerId(String scalerId) { this.scalerId = scalerId; }
-
-    public void setUrl(String url) { this.url = url; }
+    private String scalerId;
 
     public String getScheme() {
         return scheme;
@@ -39,5 +26,37 @@ public class AutoscalerBean {
 
     public void setScheme(String scheme) {
         this.scheme = scheme;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getPlatform() {
+        return platform;
+    }
+
+    public void setPlatform(String platform) {
+        this.platform = platform;
+    }
+
+    public String getScalerId() {
+        return scalerId;
+    }
+
+    public void setScalerId(String scalerId) {
+        this.scalerId = scalerId;
     }
 }
