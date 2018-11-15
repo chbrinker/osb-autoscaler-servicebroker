@@ -13,17 +13,20 @@ import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
 import de.evoila.cf.broker.repository.ServiceInstanceRepository;
 import de.evoila.cf.broker.service.HAProxyService;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
+import de.evoila.cf.broker.util.GlobalConstants;
 import de.evoila.cf.config.security.AcceptSelfSignedClientHttpRequestFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.core.env.Environment;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,10 +45,14 @@ public class AutoscalerBindingService extends BindingServiceImpl {
     private static final String APPLICATION_JSON = "application/json";
 
     private static final String BINDING_ENDPOINT = "/bindings";
+
+    private String POST_FIX = "";
     
     private RestTemplate restTemplate = new RestTemplate();
 
     private AutoscalerBean autoscalerBean;
+
+    private Environment environment;
 
     @PostConstruct
     private void init() {
@@ -59,9 +66,17 @@ public class AutoscalerBindingService extends BindingServiceImpl {
         restTemplate.setRequestFactory(requestFactory);
     }
 
-    public AutoscalerBindingService(BindingRepository bindingRepository, ServiceDefinitionRepository serviceDefinitionRepository, ServiceInstanceRepository serviceInstanceRepository,
-                                    RouteBindingRepository routeBindingRepository, HAProxyService haProxyService, AutoscalerBean autoscalerBean) {
+    public AutoscalerBindingService(BindingRepository bindingRepository, ServiceDefinitionRepository serviceDefinitionRepository,
+                                    ServiceInstanceRepository serviceInstanceRepository,
+                                    RouteBindingRepository routeBindingRepository,
+                                    HAProxyService haProxyService, AutoscalerBean autoscalerBean,
+                                    Environment environment) {
         super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository, haProxyService);
+        this.environment = environment;
+        if (Arrays.stream(environment.getActiveProfiles()).anyMatch(
+                env -> (env.equalsIgnoreCase(GlobalConstants.TEST_PROFILE)))) {
+            POST_FIX = "-test";
+        }
         this.autoscalerBean = autoscalerBean;
     }
 
@@ -146,7 +161,7 @@ public class AutoscalerBindingService extends BindingServiceImpl {
 
         HttpEntity<Binding> request = new HttpEntity<>(binding, headers);
 
-        String url = autoscalerBean.getScheme() + "://" + autoscalerBean.getUrl() + BINDING_ENDPOINT;
+        String url = autoscalerBean.getScheme() + "://" + autoscalerBean.getUrl() + POST_FIX + BINDING_ENDPOINT;
 
         ResponseEntity<String> response;
         try {
@@ -161,7 +176,7 @@ public class AutoscalerBindingService extends BindingServiceImpl {
     private ResponseEntity<String> delete(String bindingId, String instanceId) {
         HttpEntity request = new HttpEntity(headers);
 
-        String url = autoscalerBean.getScheme() + "://" + autoscalerBean.getUrl() + BINDING_ENDPOINT + "/" + bindingId;
+        String url = autoscalerBean.getScheme() + "://" + autoscalerBean.getUrl() + POST_FIX + BINDING_ENDPOINT + "/" + bindingId;
 
         ResponseEntity<String> response;
         try {
