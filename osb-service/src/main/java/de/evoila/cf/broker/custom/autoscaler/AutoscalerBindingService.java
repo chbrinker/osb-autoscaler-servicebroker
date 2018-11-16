@@ -80,7 +80,6 @@ public class AutoscalerBindingService extends BindingServiceImpl {
         });
     }
 
-
     @Override
     protected RouteBinding bindRoute(ServiceInstance serviceInstance, String route) {
         throw new UnsupportedOperationException();
