@@ -10,39 +10,9 @@ import org.springframework.stereotype.Service;
 @ConfigurationProperties(prefix = "autoscaler")
 public class AutoscalerBean {
 
-    private String scheme;
-
-    private int port;
-
-    private String url;
-
     private String platform;
 
     private String scalerId;
-
-    public String getScheme() {
-        return scheme;
-    }
-
-    public void setScheme(String scheme) {
-        this.scheme = scheme;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
 
     public String getPlatform() {
         return platform;

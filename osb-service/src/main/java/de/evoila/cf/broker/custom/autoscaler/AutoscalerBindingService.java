@@ -3,6 +3,7 @@ package de.evoila.cf.broker.custom.autoscaler;
 import de.evoila.cf.autoscaler.api.binding.Binding;
 import de.evoila.cf.autoscaler.api.binding.BindingContext;
 import de.evoila.cf.broker.bean.AutoscalerBean;
+import de.evoila.cf.broker.bean.EndpointConfiguration;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.exception.ServiceInstanceBindingBadRequestException;
 import de.evoila.cf.broker.exception.ServiceInstanceBindingException;
@@ -13,20 +14,17 @@ import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
 import de.evoila.cf.broker.repository.ServiceInstanceRepository;
 import de.evoila.cf.broker.service.HAProxyService;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
-import de.evoila.cf.broker.util.GlobalConstants;
 import de.evoila.cf.config.security.AcceptSelfSignedClientHttpRequestFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.core.env.Environment;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,13 +44,15 @@ public class AutoscalerBindingService extends BindingServiceImpl {
 
     private static final String BINDING_ENDPOINT = "/bindings";
 
-    private String POST_FIX = "";
+    private static final String AS_CORE_IDENTIFIER = "osb-autoscaler-core";
     
     private RestTemplate restTemplate = new RestTemplate();
 
     private AutoscalerBean autoscalerBean;
 
-    private Environment environment;
+    private EndpointConfiguration endpointConfiguration;
+
+    private String endpoint;
 
     @PostConstruct
     private void init() {
@@ -70,14 +70,14 @@ public class AutoscalerBindingService extends BindingServiceImpl {
                                     ServiceInstanceRepository serviceInstanceRepository,
                                     RouteBindingRepository routeBindingRepository,
                                     HAProxyService haProxyService, AutoscalerBean autoscalerBean,
-                                    Environment environment) {
+                                    EndpointConfiguration endpointConfiguration) {
         super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository, haProxyService);
-        this.environment = environment;
-        if (Arrays.stream(environment.getActiveProfiles()).anyMatch(
-                env -> (env.equalsIgnoreCase(GlobalConstants.TEST_PROFILE)))) {
-            POST_FIX = "-test";
-        }
+        this.endpointConfiguration = endpointConfiguration;
         this.autoscalerBean = autoscalerBean;
+        endpointConfiguration.getCustom().forEach(server -> {
+            if (server.getIdentifier().equals(AS_CORE_IDENTIFIER))
+                this.endpoint = server.getUrl();
+        });
     }
 
 
@@ -94,6 +94,9 @@ public class AutoscalerBindingService extends BindingServiceImpl {
     @Override
     protected ServiceInstanceBinding bindService(String bindingId, ServiceInstanceBindingRequest serviceInstanceBindingRequest,
                                                  ServiceInstance serviceInstance, Plan plan) throws ServiceBrokerException {
+
+        if (this.endpoint == null)
+            throw new ServiceBrokerException("Autoscaler Core could not be found in custom endpoints with identifier: " + AS_CORE_IDENTIFIER);
 
         ResponseEntity<String> response = post(bindingId, serviceInstanceBindingRequest.getAppGuid(), serviceInstance);
 
@@ -161,7 +164,7 @@ public class AutoscalerBindingService extends BindingServiceImpl {
 
         HttpEntity<Binding> request = new HttpEntity<>(binding, headers);
 
-        String url = autoscalerBean.getScheme() + "://" + autoscalerBean.getUrl() + POST_FIX + BINDING_ENDPOINT;
+        String url = this.endpoint + BINDING_ENDPOINT;
 
         ResponseEntity<String> response;
         try {
@@ -176,7 +179,7 @@ public class AutoscalerBindingService extends BindingServiceImpl {
     private ResponseEntity<String> delete(String bindingId, String instanceId) {
         HttpEntity request = new HttpEntity(headers);
 
-        String url = autoscalerBean.getScheme() + "://" + autoscalerBean.getUrl() + POST_FIX + BINDING_ENDPOINT + "/" + bindingId;
+        String url = this.endpoint + BINDING_ENDPOINT + "/" + bindingId;
 
         ResponseEntity<String> response;
         try {
