@@ -1,9 +1,9 @@
 package de.evoila.cf.broker.custom.autoscaler;
 
 import de.evoila.cf.broker.exception.PlatformException;
-import de.evoila.cf.broker.model.Plan;
 import de.evoila.cf.broker.model.Platform;
 import de.evoila.cf.broker.model.ServiceInstance;
+import de.evoila.cf.broker.model.catalog.plan.Plan;
 import de.evoila.cf.broker.repository.PlatformRepository;
 import de.evoila.cf.broker.service.PlatformService;
 import org.slf4j.Logger;
@@ -35,6 +35,16 @@ public class AutoscalerPlatformService implements PlatformService {
         if(platformRepository != null) {
             platformRepository.addPlatform(Platform.EXISTING_SERVICE, this);
         }
+    }
+
+    @Override
+    public boolean isSyncPossibleOnBind() {
+        return true;
+    }
+
+    @Override
+    public boolean isSyncPossibleOnUnbind() {
+        return true;
     }
 
     @Override

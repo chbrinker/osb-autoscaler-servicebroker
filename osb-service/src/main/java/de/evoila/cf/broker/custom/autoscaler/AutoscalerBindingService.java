@@ -7,14 +7,17 @@ import de.evoila.cf.broker.bean.EndpointConfiguration;
 import de.evoila.cf.broker.exception.ServiceBrokerException;
 import de.evoila.cf.broker.exception.ServiceInstanceBindingBadRequestException;
 import de.evoila.cf.broker.exception.ServiceInstanceBindingException;
-import de.evoila.cf.broker.model.*;
-import de.evoila.cf.broker.repository.BindingRepository;
-import de.evoila.cf.broker.repository.RouteBindingRepository;
-import de.evoila.cf.broker.repository.ServiceDefinitionRepository;
-import de.evoila.cf.broker.repository.ServiceInstanceRepository;
+import de.evoila.cf.broker.model.RouteBinding;
+import de.evoila.cf.broker.model.ServiceInstance;
+import de.evoila.cf.broker.model.ServiceInstanceBinding;
+import de.evoila.cf.broker.model.ServiceInstanceBindingRequest;
+import de.evoila.cf.broker.model.catalog.ServerAddress;
+import de.evoila.cf.broker.model.catalog.plan.Plan;
+import de.evoila.cf.broker.repository.*;
+import de.evoila.cf.broker.service.AsyncBindingService;
 import de.evoila.cf.broker.service.HAProxyService;
 import de.evoila.cf.broker.service.impl.BindingServiceImpl;
-import de.evoila.cf.config.security.AcceptSelfSignedClientHttpRequestFactory;
+import de.evoila.cf.security.utils.AcceptSelfSignedClientHttpRequestFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,8 +73,10 @@ public class AutoscalerBindingService extends BindingServiceImpl {
                                     ServiceInstanceRepository serviceInstanceRepository,
                                     RouteBindingRepository routeBindingRepository,
                                     HAProxyService haProxyService, AutoscalerBean autoscalerBean,
-                                    EndpointConfiguration endpointConfiguration) {
-        super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository, haProxyService);
+                                    EndpointConfiguration endpointConfiguration, JobRepository jobRepository,
+                                    AsyncBindingService asyncBindingService, PlatformRepository platformRepository) {
+        super(bindingRepository, serviceDefinitionRepository, serviceInstanceRepository, routeBindingRepository,
+                haProxyService, jobRepository, asyncBindingService, platformRepository);
         this.endpointConfiguration = endpointConfiguration;
         this.autoscalerBean = autoscalerBean;
         endpointConfiguration.getCustom().forEach(server -> {
@@ -83,11 +88,6 @@ public class AutoscalerBindingService extends BindingServiceImpl {
     @Override
     protected RouteBinding bindRoute(ServiceInstance serviceInstance, String route) {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ServiceInstanceBinding getServiceInstanceBinding(String id) {
-        return null;
     }
 
     @Override
