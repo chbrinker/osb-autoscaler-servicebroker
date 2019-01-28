@@ -110,4 +110,9 @@ public class AutoscalerPlatformService implements PlatformService {
 		throw new UnsupportedOperationException();
 	}
 
+    @Override
+    public ServiceInstance getInstance(ServiceInstance serviceInstance, Plan plan) throws PlatformException {
+        return null;
+    }
+
 }
